@@ -36,7 +36,9 @@ Resources:
                       "iam:DeleteGroup",
                       "iam:DeleteUser"
                       ],
-                    "Resource": ["*"]
+                    "Resource": [
+                      "*"
+                    ]
                 }
             ]
         }
@@ -63,7 +65,7 @@ Resources:
                 {
                     "Effect": "Deny",
                     "Action": [
-                      "*",
+                      "*"
                       ],
                     "Resource": [
                       "*"

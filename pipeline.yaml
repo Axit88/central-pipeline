@@ -16,7 +16,7 @@ Parameters:
     Default: main
   OAuthToken:
     Type: String
-    Default: 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
+    Default: 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
   BucketName:
     Type: String
     Default: axitsamplepipelinebucket
@@ -82,11 +82,6 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-      Tags:
-        - Key: env 
-          Value: integration 
-        - Key: application 
-          Value: codepipeline 
 
   IAMPolicyForCodePipeline:
     Type: AWS::IAM::Policy
@@ -194,7 +189,7 @@ Resources:
                 Version: "1"
                 Provider: GitHub
               Configuration:
-                Owner: ConfigurationOwner
+                Owner: !Ref ConfigurationOwner
                 Repo: !Ref Repo
                 Branch: !Ref Branch
                 OAuthToken: !Ref OAuthToken
@@ -234,7 +229,7 @@ Resources:
                 TemplatePath: BuildOutput::rootStack.yaml
                 RoleArn: !GetAtt IAMRoleForDeployCodepipeline.Arn
               InputArtifacts:
-                - Name: SourceOutput
+                - Name: BuildOutput
               RunOrder: 2
   
   BuildProject:
@@ -287,3 +282,6 @@ Outputs:
     Export:
       Name: CentralCodePipeLine
 
+# aws cloudformation create-stack --stack-name pipelineStack --template-body file://pipeline.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+
+# aws cloudformation update-stack --stack-name pipelineStack --template-body file://pipeline.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 

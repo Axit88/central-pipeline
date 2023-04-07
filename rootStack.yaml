@@ -13,10 +13,11 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/tagPolicy.yaml
       Parameters:
-        OrganizationRoot: r-3223
+        OrganizationRoot: ou-3223-8wstomg3
   
   SsoPermissionSetNestedStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn: OUPolicyNestedStack
     Properties:
       TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/permissionSet.yaml
       Parameters:
@@ -34,7 +35,7 @@ Resources:
         QaGroupId: 17846a18-e0c1-708f-5a78-abe68be0bca5
         TechSuppotGroupId: b7b4da38-d0a1-7081-028c-e6d29618801c
         DevopsroupId: 27046a88-f0f1-7034-f086-f9b57b198317
-
+  
   SnsNestedStack: 
     Type: AWS::CloudFormation::Stack
     DependsOn: OUPolicyNestedStack
@@ -44,18 +45,21 @@ Resources:
         SnsTopicName: default-sns-topic
         SnsEndPoint: axitdhola888@gmail.com
   
-  CloudTrailNestedStack:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: OUPolicyNestedStack
-    Properties:
-      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/trail.yaml
-      Parameters:
-        TrailName: TestCloudTrail
-        TrailBucketName: cloudtrail-buckets3
-        LogGroupName: cloudtrail-cloudwatch-log-group
-        CloudTrailIamRoleName: cloudTrail-iam-role
-        SnsTopic: 
-          Fn::GetAtt:
-            - SnsNestedStack
-            - Outputs.SnsTopic 
+  # CloudTrailNestedStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   DependsOn: OUPolicyNestedStack
+  #   Properties:
+  #     TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/trail.yaml
+  #     Parameters:
+  #       TrailName: TestCloudTrail
+  #       TrailBucketName: cloudtrail-buckets3
+  #       LogGroupName: cloudtrail-cloudwatch-log-group
+  #       CloudTrailIamRoleName: cloudTrail-iam-role
+  #       SnsTopic: 
+  #         Fn::GetAtt:
+  #           - SnsNestedStack
+  #           - Outputs.SnsTopic 
 
+# aws cloudformation create-stack --stack-name pipelineStack --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+
+# aws cloudformation update-stack --stack-name pipelineStack --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 
