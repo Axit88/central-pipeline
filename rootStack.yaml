@@ -32,9 +32,9 @@ Resources:
         AccountId: 540333447929
         InstanceArn: arn:aws:sso:::instance/ssoins-77582076aa92fcf2
         DevGroupId: c794aa38-f001-7066-07f6-bcf6929f5b3a
-        QaGroupId: 17846a18-e0c1-708f-5a78-abe68be0bca5
-        TechSuppotGroupId: b7b4da38-d0a1-7081-028c-e6d29618801c
-        DevopsGroupId: 27046a88-f0f1-7034-f086-f9b57b198317
+        QaGroupId: 27046a88-f0f1-7034-f086-f9b57b198317
+        TechSupportGroupId: b7b4da38-d0a1-7081-028c-e6d29618801c
+        DevopsGroupId: 37342a58-7091-7052-ed93-5f298e256777
   
   SnsNestedStack: 
     Type: AWS::CloudFormation::Stack
