@@ -63,15 +63,3 @@ Resources:
 # aws cloudformation create-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
 
 # aws cloudformation update-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 
-
-
-201901004@daiict.ac.in
-ssh-keygen -t rsa -C 201901004@daiict.ac.in -f axitdhola
- ssh-add -K ~/.ssh/axitdhola
- vim ~/.ssh/axitdhola
-pbcopy < ~/.ssh/axitdhola.pub
-
-axit.dhola@mindtickle.com
-ssh-keygen -t rsa -C axit.dhola@mindtickle.com -f Axit88
-ssh-add -K ~/.ssh/Axit88
-pbcopy < ~/.ssh/Axit88.pub
