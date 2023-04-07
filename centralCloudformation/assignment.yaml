@@ -48,15 +48,25 @@ Resources:
       TargetType: AWS_ACCOUNT
       PermissionSetArn: !ImportValue QaPermissionSet  
 
-  ProdAssignment:
+  TechSupportAssignment:
     Type: AWS::SSO::Assignment
     Properties:
       InstanceArn: !Ref InstanceArn
-      PrincipalId: !Ref ProdGroupId
+      PrincipalId: !Ref TechSupportGroupId
       PrincipalType: GROUP 
       TargetId: !Ref AccountId
       TargetType: AWS_ACCOUNT
-      PermissionSetArn: !ImportValue ProdPermissionSet  
+      PermissionSetArn: !ImportValue TechSupportPermissionSet  
+  
+  DevopsAssignment:
+    Type: AWS::SSO::Assignment
+    Properties:
+      InstanceArn: !Ref InstanceArn
+      PrincipalId: !Ref DevopsGroupId
+      PrincipalType: GROUP 
+      TargetId: !Ref AccountId
+      TargetType: AWS_ACCOUNT
+      PermissionSetArn: !ImportValue DevopsPermissionSet  
 
 # aws cloudformation create-stack --stack-name SsoStack2 --template-body file://assignment.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
 

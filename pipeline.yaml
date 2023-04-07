@@ -16,7 +16,7 @@ Parameters:
     Default: main
   OAuthToken:
     Type: String
-    Default: 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
+    Default: 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
   BucketName:
     Type: String
     Default: axitsamplepipelinebucket
@@ -88,6 +88,8 @@ Resources:
           - Action:
             - organizations:*
             - sso:*
+            - sns:*
+            - sso-directory:*
             Resource: "*"
             Effect: Allow
       ManagedPolicyArns:
