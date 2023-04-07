@@ -32,6 +32,18 @@ Parameters:
   CodePipelineRoleForDeploy:
     Type: String
     Default: central-nested-codepipeline-deploy-role
+  BuildType: 
+    Type: String
+    Default: LINUX_CONTAINER
+  BuildImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+  BuildComputeType: 
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+  IAMRoleForLambdaCodeBuildName:
+    Type: String
+    Default: central-nested-IAMRoleForLambdaCodeBuild
 
 Resources:
   IAMRoleForCodePipeline:
@@ -190,6 +202,23 @@ Resources:
               OutputArtifacts:
                 - Name: SourceOutput
               RunOrder: 1
+
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ProjectName: !Ref BuildProject
+              RunOrder: 1
+
         - Name: Deploy
           Actions:
             - Name: Deploy
@@ -202,11 +231,54 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 StackName: !Ref DeployStackName
                 Capabilities: CAPABILITY_NAMED_IAM
-                TemplatePath: SourceOutput::rootStack.yaml
+                TemplatePath: BuildOutput::rootStack.yaml
                 RoleArn: !GetAtt IAMRoleForDeployCodepipeline.Arn
               InputArtifacts:
                 - Name: SourceOutput
               RunOrder: 2
+  
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: CentralPipelineBuildProject
+      Source:
+        Type: GITHUB
+        Location: !Sub 'https://github.com/${ConfigurationOwner}/${Repo}.git'
+      Artifacts:
+        Type: S3 
+        Name: CentralBuildProjectArtifacts
+        Location: !Ref BucketName
+      # Triggers:
+      #   Webhook: true
+      Environment:
+        Type: !Ref BuildType
+        Image: !Ref BuildImage
+        ComputeType: !Ref BuildComputeType
+        ImagePullCredentialsType: CODEBUILD
+      ServiceRole: !GetAtt IAMRoleForLambdaCodeBuild.Arn
+      TimeoutInMinutes: 60
+      QueuedTimeoutInMinutes: 480
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+  
+  IAMRoleForLambdaCodeBuild:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: !Ref IAMRoleForLambdaCodeBuildName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 
 Outputs:
   CentralCodePipeLine:
@@ -214,3 +286,4 @@ Outputs:
     Value: !Ref CentralCodePipeLine
     Export:
       Name: CentralCodePipeLine
+

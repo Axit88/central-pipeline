@@ -1,0 +1,10 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - export ARTIFACTS_BUCKET=axitsamplepipelinebucket
+      - aws s3 cp . s3://$ARTIFACTS_BUCKET/ --recursive
+artifacts:
+  type: zip
+  files: 
+    - rootStack.yaml
