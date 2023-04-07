@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Enforce tag policy for all resources
+
+Parameters:
+    OrganizationRoot:
+        Type: String
+        Default: r-3223
+
+Resources:
+    EnforeTagSCPPolicy:
+        Type: AWS::Organizations::Policy
+        Properties:
+            TargetIds:
+                - !Ref OrganizationRoot
+            Name: ScpPolicyForEnforceTag
+            Description: Without tags resources will be not created
+            Type: SERVICE_CONTROL_POLICY
+            Content: >-
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                        "Sid": "Statement1",
+                        "Effect": "Deny",
+                        "Action": [
+                            "secretsmanager:CreateSecret",
+                            "lambda:CreateFunction",
+                            "rds:CreateDBInstance",
+                            "s3:CreateBucket",
+                            "dynamodb:CreateTable",
+                            "iam:CreateRole",
+                            "states:CreateStateMachine",
+                            "apigateway:CreateRestApi",
+                            "cloudtrail:CreateTrail",
+                            "events:CreateRule",
+                            "mq:CreateBroker",
+                            "kafka:CreateCluster",
+                            "sqs:CreateQueue",
+                            "ec2:CreateVpc",
+                            "sns:CreateTopic",
+                            "glue:CreateCrawler",
+                            "xray:CreateSamplingRule",
+                            "iam:CreatePolicy",
+                            "elasticloadbalancing:CreateLoadBalancer",
+                            "autoscaling:CreateAutoScalingGroup",
+                            "athena:CreateWorkGroup",
+                            "apigateway:CreateRestApi",
+                            "ec2:RunInstances",
+                            "ec2:CreateSecurityGroup"
+                        ],
+                        "Resource": "*",
+                        "Condition": {
+                            "Null": {
+                            "aws:RequestTag/env": "true"
+                            }
+                        }
+                        },
+                        {
+                        "Sid": "Statement2",
+                        "Effect": "Deny",
+                        "Action": [
+                            "secretsmanager:CreateSecret",
+                            "lambda:CreateFunction",
+                            "rds:CreateDBInstance",
+                            "s3:CreateBucket",
+                            "dynamodb:CreateTable",
+                            "iam:CreateRole",
+                            "states:CreateStateMachine",
+                            "apigateway:CreateRestApi",
+                            "cloudtrail:CreateTrail",
+                            "events:CreateRule",
+                            "mq:CreateBroker",
+                            "kafka:CreateCluster",
+                            "sqs:CreateQueue",
+                            "ec2:CreateVpc",
+                            "sns:CreateTopic",
+                            "glue:CreateCrawler",
+                            "xray:CreateSamplingRule",
+                            "iam:CreatePolicy",
+                            "elasticloadbalancing:CreateLoadBalancer",
+                            "autoscaling:CreateAutoScalingGroup",
+                            "athena:CreateWorkGroup",
+                            "apigateway:CreateRestApi",
+                            "ec2:RunInstances",
+                            "ec2:CreateSecurityGroup"
+                        ],
+                        "Resource": [
+                            "*"
+                        ],
+                        "Condition": {
+                            "Null": {
+                            "aws:RequestTag/application": "true"
+                            }
+                        }
+                        },
+                        {
+                        "Sid": "Statement3",
+                        "Effect": "Allow",
+                        "Action": [
+                            "*"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                        }
+                    ]
+                }
+
+    TagPolicy:
+        Type: AWS::Organizations::Policy
+        Properties:
+            TargetIds:
+                - !Ref OrganizationRoot
+            Name: DefineTagPolicyForAllResources
+            Description: CostCenter tag should comply with case specified in the policy
+            Type: TAG_POLICY
+            Content: >-
+                {
+                  "tags": {
+                      "env": {
+                      "tag_value": {
+                          "@@assign": [
+                          "integration",
+                          "staging",
+                          "prod"
+                          ]
+                      },
+                      "enforced_for": {
+                          "@@assign": [
+                              "secretsmanager:CreateSecret",
+                              "lambda:CreateFunction",
+                              "rds:CreateDBInstance",
+                              "s3:CreateBucket",
+                              "dynamodb:CreateTable",
+                              "iam:CreateRole",
+                              "states:CreateStateMachine",
+                              "apigateway:CreateRestApi",
+                              "cloudtrail:CreateTrail",
+                              "events:CreateRule",
+                              "mq:CreateBroker",
+                              "kafka:CreateCluster",
+                              "sqs:CreateQueue",
+                              "ec2:CreateVpc",
+                              "sns:CreateTopic",
+                              "glue:CreateCrawler",
+                              "xray:CreateSamplingRule",
+                              "iam:CreatePolicy",
+                              "elasticloadbalancing:CreateLoadBalancer",
+                              "autoscaling:CreateAutoScalingGroup",
+                              "athena:CreateWorkGroup",
+                              "apigateway:CreateRestApi",
+                              "ec2:RunInstances",
+                              "ec2:CreateSecurityGroup"
+                              ]
+                          }
+                          }
+                      }
+                  }
+
+# aws cloudformation create-stack --stack-name enforceMfaStack --template-body file://tagPolicy.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+
+# aws cloudformation update-stack --stack-name enforceMfaStack --template-body file://tagPolicy.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback

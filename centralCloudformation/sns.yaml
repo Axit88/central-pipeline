@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creating sns topic
+
+Parameters:
+  SnsTopicName: 
+    Type: String
+    Default: default-sns-topic
+  SnsEndPoint: 
+    Type: String
+    Default: axitdhola888@gmail.com
+
+Resources:
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Aws SNS Alert
+      TopicName: !Ref SnsTopicName
+      Tags:
+        - Key: env 
+          Value: integration 
+        - Key: application 
+          Value: vpc 
+
+  SNSTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref SNSTopic
+      Endpoint: !Ref SnsEndPoint  
+
+Outputs:
+  SnsTopic:
+    Description: sns topic detail
+    Value: !Ref SNSTopic
+    Export: 
+      Name: SnsTopic  

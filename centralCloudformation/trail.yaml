@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creating cloudtrail and s3 bucket to store the trails.
+
+Parameters:
+  TrailName: 
+    Type: String
+    Default: TestCloudTrail
+    
+  TrailBucketName: 
+    Type: String
+    Default: cloudtrail-s3buckett
+  
+  LogGroupName:
+    Type: String
+    Default: cloudtrail-cloudwatch-log-group
+
+  CloudTrailIamRoleName:
+    Type: String
+    Default: cloudTrail-iam-role
+
+  SnsTopic: 
+    Type: String
+
+Resources: 
+
+  NewTrailBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref TrailBucketName
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled 
+
+  CloudTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      S3BucketName: !Ref NewTrailBucket
+      IsLogging: true
+      EnableLogFileValidation: true
+      IncludeGlobalServiceEvents: true
+      TrailName: !Ref TrailName
+      IsMultiRegionTrail: true  
+      CloudWatchLogsLogGroupArn: !GetAtt CloudWatchLogGroup.Arn 
+      CloudWatchLogsRoleArn: !GetAtt IAMRoleForCloudTrailLogs.Arn
+    
+  IAMRoleForCloudTrailLogs:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: !Ref CloudTrailIamRoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "cloudtrail.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+       
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref LogGroupName
+
+  S3BucketPolicyForTrail:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref NewTrailBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AWSCloudTrailAclCheck20150319
+          Effect: Allow
+          Principal:
+            Service: cloudtrail.amazonaws.com
+          Action: s3:GetBucketAcl
+          Resource: !Sub arn:aws:s3:::${NewTrailBucket}
+          Condition:
+            StringEquals:
+              aws:SourceArn: !Sub arn:aws:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/${TrailName}
+        - Sid: AWSCloudTrailWrite20150319
+          Effect: Allow
+          Principal:
+            Service: cloudtrail.amazonaws.com
+          Action: s3:PutObject
+          Resource: !Sub arn:aws:s3:::${NewTrailBucket}/AWSLogs/${AWS::AccountId}/*
+          Condition:
+            StringEquals:
+              s3:x-amz-acl: bucket-owner-full-control
+              aws:SourceArn: !Sub arn:aws:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/${TrailName}
+
+
+  CloudTrailMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref CloudWatchLogGroup
+      FilterPattern: "{($.eventName = 'CreateAccessKey') || ($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}"  
+      MetricTransformations:
+      - MetricNamespace: CloudTrailMetric
+        MetricName: IamEventCount
+        MetricValue: 1
+
+  CloudTrailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: CloudTrailMetricFilter
+    Properties:
+      AlarmName: CloudTrailAlarm
+      AlarmDescription: Alarms when iam releted events occur 
+      AlarmActions:
+      - Ref: SnsTopic 
+      Namespace: CloudTrailMetric
+      MetricName: IamEventCount 
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+  
+  SecurityGroupMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref CloudWatchLogGroup
+      FilterPattern: "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }"
+      MetricTransformations:
+      - MetricNamespace: CloudTrailMetric
+        MetricName: SecurityGroupCount
+        MetricValue: 1
+
+  SecurityGroupCloudTrailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: CloudTrailMetricFilter
+    Properties:
+      AlarmName: CloudTrailAlarm
+      AlarmDescription: Alarms when SecurityGroup Related events Occur 
+      AlarmActions:
+      - Ref: SnsTopic 
+      Namespace: CloudTrailMetric
+      MetricName: SecurityGroupCount 
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+
+Outputs:
+  CloudTrail:
+    Description: Trail Detail
+    Value: !Ref CloudTrail
+    Export:
+      Name: CloudTrail
+
+
+#aws cloudformation create-stack --stack-name trailStack --template-body file://trail.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+
+#aws cloudformation update-stack --stack-name trailStack --template-body file://trail.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 

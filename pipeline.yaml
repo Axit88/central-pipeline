@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CodePipeline with Cloudformation 
+
+Parameters:
+  PipeLineName:
+    Type: String
+    Default: default-pipeline
+  ConfigurationOwner:
+    Type: String
+    Default: Axit88
+  Repo:
+    Type: String
+    Default: central-pipeline
+  Branch:
+    Type: String
+    Default: main
+  OAuthToken:
+    Type: String
+    Default: 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
+  BucketName:
+    Type: String
+    Default: axitsamplepipelinebucket
+  DeployStackName:
+    Type: String
+    Default: central-pipeline-stack
+  CodePipelineRoleName: 
+    Type: String
+    Default: central-nested-codepipeline-role
+  CodePipelinePolicyName: 
+    Type: String
+    Default: central-nested-codepipeline-policy
+  CodePipelineRoleForDeploy:
+    Type: String
+    Default: central-nested-codepipeline-deploy-role
+
+Resources:
+  IAMRoleForCodePipeline:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: !Ref CodePipelineRoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Tags:
+        - Key: env 
+          Value: integration 
+        - Key: application 
+          Value: codepipeline 
+  
+  IAMRoleForDeployCodepipeline:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: !Ref CodePipelineRoleForDeploy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "cloudformation.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      Tags:
+        - Key: env 
+          Value: integration 
+        - Key: application 
+          Value: codepipeline 
+
+  IAMPolicyForCodePipeline:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Ref CodePipelinePolicyName
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:GetObject
+          - s3:GetObjectVersion
+          - s3:GetBucketVersioning
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - s3:PutObject
+          Resource:
+          - arn:aws:s3:::codepipeline*
+          - arn:aws:s3:::elasticbeanstalk*
+          Effect: Allow
+        - Action:
+          - codecommit:CancelUploadArchive
+          - codecommit:GetBranch
+          - codecommit:GetCommit
+          - codecommit:GetUploadArchiveStatus
+          - codecommit:UploadArchive
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - codedeploy:CreateDeployment
+          - codedeploy:GetApplicationRevision
+          - codedeploy:GetDeployment
+          - codedeploy:GetDeploymentConfig
+          - codedeploy:RegisterApplicationRevision
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - elasticbeanstalk:*
+          - ec2:*
+          - elasticloadbalancing:*
+          - autoscaling:*
+          - cloudwatch:*
+          - s3:*
+          - sns:*
+          - cloudformation:*
+          - rds:*
+          - sqs:*
+          - ecs:*
+          - iam:PassRole
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - lambda:InvokeFunction
+          - lambda:ListFunctions
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - opsworks:CreateDeployment
+          - opsworks:DescribeApps
+          - opsworks:DescribeCommands
+          - opsworks:DescribeDeployments
+          - opsworks:DescribeInstances
+          - opsworks:DescribeStacks
+          - opsworks:UpdateApp
+          - opsworks:UpdateStack
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - cloudformation:CreateStack
+          - cloudformation:DeleteStack
+          - cloudformation:DescribeStacks
+          - cloudformation:UpdateStack
+          - cloudformation:CreateChangeSet
+          - cloudformation:DeleteChangeSet
+          - cloudformation:DescribeChangeSet
+          - cloudformation:ExecuteChangeSet
+          - cloudformation:SetStackPolicy
+          - cloudformation:ValidateTemplate
+          - iam:PassRole
+          Resource: "*"
+          Effect: Allow
+        - Action:
+          - codebuild:BatchGetBuilds
+          - codebuild:StartBuild
+          Resource: "*"
+          Effect: Allow
+        Version: '2012-10-17'
+      Roles:
+        - Ref: IAMRoleForCodePipeline
+      
+  CentralCodePipeLine:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref BucketName
+      Name: !Ref PipeLineName
+      RoleArn: !GetAtt IAMRoleForCodePipeline.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source 
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: "1"
+                Provider: GitHub
+              Configuration:
+                Owner: ConfigurationOwner
+                Repo: !Ref Repo
+                Branch: !Ref Branch
+                OAuthToken: !Ref OAuthToken
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceOutput
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: "1"
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: !Ref DeployStackName
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: SourceOutput::rootStack.yaml
+                RoleArn: !GetAtt IAMRoleForDeployCodepipeline.Arn
+              InputArtifacts:
+                - Name: SourceOutput
+              RunOrder: 2
+
+Outputs:
+  CentralCodePipeLine:
+    Description: CentralCodePipeLine Detail
+    Value: !Ref CentralCodePipeLine
+    Export:
+      Name: CentralCodePipeLine

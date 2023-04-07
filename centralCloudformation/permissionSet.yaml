@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creating permission sets 
+
+Parameters:
+  InstanceArn:
+    Type: String
+    Default: arn:aws:sso:::instance/ssoins-77582076aa92fcf2
+
+Resources:
+  QaPermissionSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      InstanceArn: !Ref InstanceArn
+      Name: QaPermissionSet
+      Description: View only access for QA
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+        
+  DevPermissionSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      InstanceArn: !Ref InstanceArn
+      Name: DevPermissionSet
+      Description: dev permission set
+      InlinePolicy: |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Deny",
+                    "Action": [
+                      "iam:CreateAccessKey",
+                      "iam:AddUserToGroup",
+                      "iam:CreateGroup",
+                      "iam:CreateUser",
+                      "iam:DeleteGroup",
+                      "iam:DeleteUser"
+                      ],
+                    "Resource": ["*"]
+                }
+            ]
+        }
+    
+  TechSupportPermissionSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      InstanceArn: !Ref InstanceArn
+      Name: TechSupportPermissionSet
+      Description: TechSupport permission set
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/job-function/SupportUser
+
+  DevopsPermissionSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      InstanceArn: !Ref InstanceArn
+      Name: DevopsPermissionSet
+      Description: Devops permission set
+      InlinePolicy: |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Deny",
+                    "Action": [
+                      "*",
+                      ],
+                    "Resource": [
+                      "*"
+                      ]
+                }
+            ]
+        }
+
+Outputs:
+  QaPermissionSet: 
+    Description: QaPermissionSet Detail
+    Value: !GetAtt QaPermissionSet.PermissionSetArn
+    Export: 
+      Name: QaPermissionSet
+
+  DevPermissionSet: 
+    Description: DevPermissionSet Detail
+    Value: !GetAtt DevPermissionSet.PermissionSetArn
+    Export: 
+      Name: DevPermissionSet 
+  
+  DevopsPermissionSet: 
+    Description: DevopsPermissionSet Detail
+    Value: !GetAtt DevopsPermissionSet.PermissionSetArn
+    Export: 
+      Name: DevopsPermissionSet 
+  
+  TechSupportPermissionSet: 
+    Description: TechSupportPermissionSet Detail
+    Value: !GetAtt TechSupportPermissionSet.PermissionSetArn
+    Export: 
+      Name: TechSupportPermissionSet 
+
+# aws cloudformation create-stack --stack-name SsoStack --template-body file://permissionSet.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+
+# aws cloudformation update-stack --stack-name SsoStack --template-body file://permissionSet.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 

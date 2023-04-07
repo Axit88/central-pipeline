@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creating root stack, that will create nested stacks.
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: axitsamplepipelinebucket
+
+Resources:
+
+  OUPolicyNestedStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/tagPolicy.yaml
+      Parameters:
+        OrganizationRoot: r-3223
+  
+  SsoPermissionSetNestedStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/permissionSet.yaml
+      Parameters:
+        InstanceArn: arn:aws:sso:::instance/ssoins-77582076aa92fcf2
+  
+  SsoAssignPermissionSet:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SsoPermissionSetNestedStack
+    Properties:
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/assignment.yaml
+      Parameters:
+        AccountId: 540333447929
+        InstanceArn: arn:aws:sso:::instance/ssoins-77582076aa92fcf2
+        DevGroupId: c794aa38-f001-7066-07f6-bcf6929f5b3a
+        QaGroupId: 17846a18-e0c1-708f-5a78-abe68be0bca5
+        TechSuppotGroupId: b7b4da38-d0a1-7081-028c-e6d29618801c
+        DevopsroupId: 27046a88-f0f1-7034-f086-f9b57b198317
+
+  SnsNestedStack: 
+    Type: AWS::CloudFormation::Stack
+    DependsOn: OUPolicyNestedStack
+    Properties:
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.centralCloudformation/sns/sns.yaml
+      Parameters:
+        SnsTopicName: default-sns-topic
+        SnsEndPoint: axitdhola888@gmail.com
+  
+  CloudTrailNestedStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: OUPolicyNestedStack
+    Properties:
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/trail.yaml
+      Parameters:
+        TrailName: TestCloudTrail
+        TrailBucketName: cloudtrail-buckets3
+        LogGroupName: cloudtrail-cloudwatch-log-group
+        CloudTrailIamRoleName: cloudTrail-iam-role
+        SnsTopic: 
+          Fn::GetAtt:
+            - SnsNestedStack
+            - Outputs.SnsTopic 
+
