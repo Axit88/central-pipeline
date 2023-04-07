@@ -16,7 +16,7 @@ Parameters:
     Default: main
   OAuthToken:
     Type: String
-    Default: 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
+    Default: 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
   BucketName:
     Type: String
     Default: axitsamplepipelinebucket
@@ -43,7 +43,7 @@ Parameters:
     Default: BUILD_GENERAL1_SMALL
   IAMRoleForLambdaCodeBuildName:
     Type: String
-    Default: central-nested-IAMRoleForLambdaCodeBuild
+    Default: central-nested-IAMRoleForCentralPipelineCodeBuild
 
 Resources:
   IAMRoleForCodePipeline:
@@ -80,6 +80,16 @@ Resources:
                 - "cloudformation.amazonaws.com"
             Action:
               - "sts:AssumeRole"
+      Policies:
+      - PolicyName: codeDeployPolicyForAppPipeline
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Action:
+            - organizations:*
+            - sso:*
+            Resource: "*"
+            Effect: Allow
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 
@@ -250,14 +260,14 @@ Resources:
         Image: !Ref BuildImage
         ComputeType: !Ref BuildComputeType
         ImagePullCredentialsType: CODEBUILD
-      ServiceRole: !GetAtt IAMRoleForLambdaCodeBuild.Arn
+      ServiceRole: !GetAtt IAMRoleForCentralPipelineCodeBuild.Arn
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
   
-  IAMRoleForLambdaCodeBuild:
+  IAMRoleForCentralPipelineCodeBuild:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/"

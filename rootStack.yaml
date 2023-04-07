@@ -40,7 +40,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: OUPolicyNestedStack
     Properties:
-      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.centralCloudformation/sns/sns.yaml
+      TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.centralCloudformation/centralCloudformation/sns.yaml
       Parameters:
         SnsTopicName: default-sns-topic
         SnsEndPoint: axitdhola888@gmail.com
