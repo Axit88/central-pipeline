@@ -34,7 +34,7 @@ Resources:
         DevGroupId: c794aa38-f001-7066-07f6-bcf6929f5b3a
         QaGroupId: 17846a18-e0c1-708f-5a78-abe68be0bca5
         TechSuppotGroupId: b7b4da38-d0a1-7081-028c-e6d29618801c
-        DevopsroupId: 27046a88-f0f1-7034-f086-f9b57b198317
+        DevopsGroupId: 27046a88-f0f1-7034-f086-f9b57b198317
   
   SnsNestedStack: 
     Type: AWS::CloudFormation::Stack
@@ -60,6 +60,18 @@ Resources:
   #           - SnsNestedStack
   #           - Outputs.SnsTopic 
 
-# aws cloudformation create-stack --stack-name pipelineStack --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
+# aws cloudformation create-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
 
-# aws cloudformation update-stack --stack-name pipelineStack --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 
+# aws cloudformation update-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 
+
+
+201901004@daiict.ac.in
+ssh-keygen -t rsa -C 201901004@daiict.ac.in -f axitdhola
+ ssh-add -K ~/.ssh/axitdhola
+ vim ~/.ssh/axitdhola
+pbcopy < ~/.ssh/axitdhola.pub
+
+axit.dhola@mindtickle.com
+ssh-keygen -t rsa -C axit.dhola@mindtickle.com -f Axit88
+ssh-add -K ~/.ssh/Axit88
+pbcopy < ~/.ssh/Axit88.pub
