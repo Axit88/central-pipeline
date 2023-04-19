@@ -7,7 +7,7 @@ Parameters:
     Default: default-sns-topic
   SnsEndPoint: 
     Type: String
-    Default: axitdhola888@gmail.com
+    Default: Axit88888@gmail.com
 
 Resources:
   SNSTopic:

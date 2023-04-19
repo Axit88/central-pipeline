@@ -7,7 +7,7 @@ Parameters:
     Default: default-pipeline
   ConfigurationOwner:
     Type: String
-    Default: axitdhola
+    Default: Axit88
   Repo:
     Type: String
     Default: central-pipeline
@@ -16,7 +16,7 @@ Parameters:
     Default: main
   OAuthToken:
     Type: String
-    Default: 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 #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
+    Default: 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
   BucketName:
     Type: String
     Default: axitsamplepipelinebucket

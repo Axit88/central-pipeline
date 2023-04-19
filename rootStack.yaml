@@ -45,21 +45,6 @@ Resources:
         SnsTopicName: default-sns-topic
         SnsEndPoint: axitdhola888@gmail.com
   
-  # CloudTrailNestedStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   DependsOn: OUPolicyNestedStack
-  #   Properties:
-  #     TemplateURL: !Sub https://${BucketName}.s3.${AWS::Region}.amazonaws.com/centralCloudformation/trail.yaml
-  #     Parameters:
-  #       TrailName: TestCloudTrail
-  #       TrailBucketName: cloudtrail-buckets3
-  #       LogGroupName: cloudtrail-cloudwatch-log-group
-  #       CloudTrailIamRoleName: cloudTrail-iam-role
-  #       SnsTopic: 
-  #         Fn::GetAtt:
-  #           - SnsNestedStack
-  #           - Outputs.SnsTopic 
-
 # aws cloudformation create-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback
 
 # aws cloudformation update-stack --stack-name CentralPipeline --template-body file://rootStack.yaml --capabilities CAPABILITY_NAMED_IAM --disable-rollback 
